@@ -126,6 +126,12 @@
     }
   html {
     @apply font-sans;
+    /* The app is always dark-themed (see index.html), but browsers default
+       native form controls — date picker icon, scrollbar, etc. — to their
+       light-mode rendering unless told otherwise. Without this the calendar
+       icon on <input type="date"> renders near-black and is barely visible
+       against the dark background. */
+    color-scheme: dark;
     /* Always reserve the vertical scrollbar's width so centered page
        content doesn't shift sideways when a page's height crosses the
        viewport threshold (e.g. paginating between a full and partial page). */
