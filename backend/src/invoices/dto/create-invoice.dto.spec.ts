@@ -47,18 +47,18 @@ describe('CreateInvoiceDto validation', () => {
     expect(errors.find((e) => e.property === 'dueDate')).toBeUndefined();
   });
 
-  it('rejects a customer email when present but malformed', async () => {
+  it('rejects a malformed customer email', async () => {
     const errors = await validateDto({
       customer: { fullname: 'Jane', email: 'not-an-email' },
     });
     expect(errors.length).toBeGreaterThan(0);
   });
 
-  it('accepts a customer with no email at all', async () => {
+  it('rejects a customer with no email at all', async () => {
     const errors = await validateDto({
       customer: { fullname: 'Jane' },
     });
-    expect(errors).toHaveLength(0);
+    expect(errors.length).toBeGreaterThan(0);
   });
 
   it('rejects a non-positive item quantity', async () => {

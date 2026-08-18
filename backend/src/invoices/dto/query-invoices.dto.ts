@@ -6,6 +6,7 @@ import {
   IsInt,
   IsOptional,
   IsString,
+  Max,
   Min,
 } from 'class-validator';
 import { InvoiceStatus } from '../entities/invoice-status.enum';
@@ -29,11 +30,12 @@ export class QueryInvoicesDto {
   @Min(1)
   page: number = 1;
 
-  @ApiPropertyOptional({ default: 10 })
+  @ApiPropertyOptional({ default: 10, maximum: 100 })
   @IsOptional()
   @Type(() => Number)
   @IsInt()
   @Min(1)
+  @Max(100)
   pageSize: number = 10;
 
   @ApiPropertyOptional({

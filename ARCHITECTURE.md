@@ -48,7 +48,7 @@ flowchart LR
 
 - **Binds:** invoices domain / data model
 - **Prevents:** an independently-built feature introducing a `customers` table + join that nothing needs
-- **Rule:** [ADOPTED] Customer fields (`customerFullname`, `customerEmail`, `customerMobileNumber`, `customerAddress`) live directly on the `invoices` row. No feature queries "all invoices for a customer" — if one ever does, that's a deliberate follow-up decision, not an incremental add. `customerEmail` is optional (validated when present, not required) and `currency`/`currencySymbol` accept any non-empty pair server-side even though the create-invoice UI restricts the picker to a fixed short list — both deliberate deviations from the original assessment spec.
+- **Rule:** [ADOPTED] Customer fields (`customerFullname`, `customerEmail`, `customerMobileNumber`, `customerAddress`) live directly on the `invoices` row. No feature queries "all invoices for a customer" — if one ever does, that's a deliberate follow-up decision, not an incremental add. `customerEmail` is required, per the assessment spec. `currency`/`currencySymbol` accept any non-empty pair server-side even though the create-invoice UI restricts the picker to a fixed short list — a deliberate deviation from the original assessment spec.
 
 ### AD-5 — Invoice list query never joins `invoice_items`
 

@@ -47,8 +47,8 @@ export class Invoice {
   @Column()
   customerFullname: string;
 
-  @Column({ nullable: true })
-  customerEmail?: string;
+  @Column()
+  customerEmail: string;
 
   @Column({ nullable: true })
   customerMobileNumber?: string;

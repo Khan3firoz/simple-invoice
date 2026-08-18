@@ -56,29 +56,39 @@ export function LoginPage() {
 
         <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4 rounded-xl border border-border bg-card p-6">
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">Email *</Label>
             <Input
               id="email"
               type="email"
               autoComplete="email"
               placeholder="you@example.com"
               aria-invalid={!!errors.email}
+              aria-describedby={errors.email ? 'email-error' : undefined}
               {...register('email')}
             />
-            {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
+            {errors.email && (
+              <p id="email-error" className="text-sm text-destructive">
+                {errors.email.message}
+              </p>
+            )}
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
+            <Label htmlFor="password">Password *</Label>
             <Input
               id="password"
               type="password"
               autoComplete="current-password"
               placeholder="••••••••"
               aria-invalid={!!errors.password}
+              aria-describedby={errors.password ? 'password-error' : undefined}
               {...register('password')}
             />
-            {errors.password && <p className="text-sm text-destructive">{errors.password.message}</p>}
+            {errors.password && (
+              <p id="password-error" className="text-sm text-destructive">
+                {errors.password.message}
+              </p>
+            )}
           </div>
 
           {serverError && (

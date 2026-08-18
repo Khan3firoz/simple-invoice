@@ -28,9 +28,13 @@ import {
   type CreateInvoiceFormValues,
 } from './create-invoice.schema';
 
-function FieldError({ message }: { message?: string }) {
+function FieldError({ id, message }: { id: string; message?: string }) {
   if (!message) return null;
-  return <p className="mt-1 text-sm text-destructive">{message}</p>;
+  return (
+    <p id={id} className="mt-1 text-sm text-destructive">
+      {message}
+    </p>
+  );
 }
 
 export function CreateInvoicePage() {
@@ -89,7 +93,7 @@ export function CreateInvoicePage() {
       description: values.description || undefined,
       customer: {
         fullname: values.customerFullname,
-        email: values.customerEmail || undefined,
+        email: values.customerEmail,
         mobileNumber: values.customerMobile || undefined,
         address: values.customerAddress || undefined,
       },
@@ -120,9 +124,10 @@ export function CreateInvoicePage() {
                 id="invoiceNumber"
                 className="mt-1.5"
                 aria-invalid={!!errors.invoiceNumber}
+                aria-describedby={errors.invoiceNumber ? 'invoiceNumber-error' : undefined}
                 {...register('invoiceNumber')}
               />
-              <FieldError message={errors.invoiceNumber?.message} />
+              <FieldError id="invoiceNumber-error" message={errors.invoiceNumber?.message} />
             </div>
             <div>
               <Label htmlFor="invoiceReference">Invoice reference</Label>
@@ -140,9 +145,10 @@ export function CreateInvoicePage() {
                 type="date"
                 className="mt-1.5"
                 aria-invalid={!!errors.invoiceDate}
+                aria-describedby={errors.invoiceDate ? 'invoiceDate-error' : undefined}
                 {...register('invoiceDate')}
               />
-              <FieldError message={errors.invoiceDate?.message} />
+              <FieldError id="invoiceDate-error" message={errors.invoiceDate?.message} />
             </div>
             <div>
               <Label htmlFor="dueDate">Due date *</Label>
@@ -152,9 +158,10 @@ export function CreateInvoicePage() {
                 min={dueDateMin}
                 className="mt-1.5"
                 aria-invalid={!!errors.dueDate}
+                aria-describedby={errors.dueDate ? 'dueDate-error' : undefined}
                 {...register('dueDate')}
               />
-              <FieldError message={errors.dueDate?.message} />
+              <FieldError id="dueDate-error" message={errors.dueDate?.message} />
             </div>
             <div>
               <Label htmlFor="currency">Currency *</Label>
@@ -199,20 +206,22 @@ export function CreateInvoicePage() {
                 id="customerFullname"
                 className="mt-1.5"
                 aria-invalid={!!errors.customerFullname}
+                aria-describedby={errors.customerFullname ? 'customerFullname-error' : undefined}
                 {...register('customerFullname')}
               />
-              <FieldError message={errors.customerFullname?.message} />
+              <FieldError id="customerFullname-error" message={errors.customerFullname?.message} />
             </div>
             <div>
-              <Label htmlFor="customerEmail">Customer email</Label>
+              <Label htmlFor="customerEmail">Customer email *</Label>
               <Input
                 id="customerEmail"
                 type="email"
                 className="mt-1.5"
                 aria-invalid={!!errors.customerEmail}
+                aria-describedby={errors.customerEmail ? 'customerEmail-error' : undefined}
                 {...register('customerEmail')}
               />
-              <FieldError message={errors.customerEmail?.message} />
+              <FieldError id="customerEmail-error" message={errors.customerEmail?.message} />
             </div>
             <div>
               <Label htmlFor="customerMobile">Customer mobile</Label>
@@ -239,7 +248,9 @@ export function CreateInvoicePage() {
             </Button>
           </div>
 
-          {errors.items?.root?.message && <FieldError message={errors.items.root.message} />}
+          {errors.items?.root?.message && (
+            <FieldError id="items-error" message={errors.items.root.message} />
+          )}
 
           <div className="space-y-4">
             {fields.map((field, index) => (
@@ -254,9 +265,13 @@ export function CreateInvoicePage() {
                     id={`items.${index}.name`}
                     className="mt-1.5"
                     aria-invalid={!!errors.items?.[index]?.name}
+                    aria-describedby={errors.items?.[index]?.name ? `items.${index}.name-error` : undefined}
                     {...register(`items.${index}.name` as const)}
                   />
-                  <FieldError message={errors.items?.[index]?.name?.message} />
+                  <FieldError
+                    id={`items.${index}.name-error`}
+                    message={errors.items?.[index]?.name?.message}
+                  />
                 </div>
                 <div>
                   <Label htmlFor={`items.${index}.quantity`}>Quantity *</Label>
@@ -267,9 +282,15 @@ export function CreateInvoicePage() {
                     min="1"
                     className="mt-1.5"
                     aria-invalid={!!errors.items?.[index]?.quantity}
+                    aria-describedby={
+                      errors.items?.[index]?.quantity ? `items.${index}.quantity-error` : undefined
+                    }
                     {...register(`items.${index}.quantity` as const)}
                   />
-                  <FieldError message={errors.items?.[index]?.quantity?.message} />
+                  <FieldError
+                    id={`items.${index}.quantity-error`}
+                    message={errors.items?.[index]?.quantity?.message}
+                  />
                 </div>
                 <div>
                   <Label htmlFor={`items.${index}.rate`}>Rate *</Label>
@@ -280,9 +301,13 @@ export function CreateInvoicePage() {
                     min="0"
                     className="mt-1.5"
                     aria-invalid={!!errors.items?.[index]?.rate}
+                    aria-describedby={errors.items?.[index]?.rate ? `items.${index}.rate-error` : undefined}
                     {...register(`items.${index}.rate` as const)}
                   />
-                  <FieldError message={errors.items?.[index]?.rate?.message} />
+                  <FieldError
+                    id={`items.${index}.rate-error`}
+                    message={errors.items?.[index]?.rate?.message}
+                  />
                 </div>
                 <div className="flex items-end justify-between gap-2 sm:flex-col sm:items-end sm:gap-1.5">
                   <span className="mt-1.5 text-sm text-muted-foreground sm:mt-6">
@@ -323,9 +348,10 @@ export function CreateInvoicePage() {
                 min="0"
                 className="mt-1.5"
                 aria-invalid={!!errors.taxPercent}
+                aria-describedby={errors.taxPercent ? 'taxPercent-error' : undefined}
                 {...register('taxPercent')}
               />
-              <FieldError message={errors.taxPercent?.message} />
+              <FieldError id="taxPercent-error" message={errors.taxPercent?.message} />
             </div>
             <div>
               <Label htmlFor="discount">Discount</Label>
@@ -336,9 +362,10 @@ export function CreateInvoicePage() {
                 min="0"
                 className="mt-1.5"
                 aria-invalid={!!errors.discount}
+                aria-describedby={errors.discount ? 'discount-error' : undefined}
                 {...register('discount')}
               />
-              <FieldError message={errors.discount?.message} />
+              <FieldError id="discount-error" message={errors.discount?.message} />
             </div>
           </div>
         </section>

@@ -53,10 +53,14 @@ describe('InvoiceListPage', () => {
 
     renderPage();
 
-    expect(await screen.findByText('IV1001')).toBeInTheDocument();
-    expect(screen.getByText('Paul Tan')).toBeInTheDocument();
-    expect(screen.getByText('AU$2,200.00')).toBeInTheDocument();
-    expect(screen.getByText('Pending')).toBeInTheDocument();
+    // Scoped to the desktop table: the same row also renders as a mobile
+    // card (see InvoiceListPage's responsive layout), so unscoped text
+    // queries would match twice.
+    const table = await screen.findByRole('table');
+    expect(await within(table).findByText('IV1001')).toBeInTheDocument();
+    expect(within(table).getByText('Paul Tan')).toBeInTheDocument();
+    expect(within(table).getByText('AU$2,200.00')).toBeInTheDocument();
+    expect(within(table).getByText('Pending')).toBeInTheDocument();
   });
 
   it('shows an empty state when there are no invoices', async () => {
@@ -64,7 +68,8 @@ describe('InvoiceListPage', () => {
 
     renderPage();
 
-    expect(await screen.findByText('No invoices found.')).toBeInTheDocument();
+    const table = await screen.findByRole('table');
+    expect(await within(table).findByText('No invoices found.')).toBeInTheDocument();
   });
 
   it('requests the next page when Next is clicked', async () => {
@@ -73,7 +78,8 @@ describe('InvoiceListPage', () => {
     const user = userEvent.setup();
     renderPage();
 
-    await screen.findByText('IV1001');
+    const table = await screen.findByRole('table');
+    await within(table).findByText('IV1001');
     await user.click(screen.getByRole('button', { name: /next/i }));
 
     await waitFor(() => {
@@ -88,7 +94,8 @@ describe('InvoiceListPage', () => {
     const user = userEvent.setup();
     renderPage();
 
-    await screen.findByText('IV1001');
+    const table = await screen.findByRole('table');
+    await within(table).findByText('IV1001');
     const dueDateHeader = screen.getByRole('button', { name: /due date/i });
 
     await user.click(dueDateHeader);
@@ -111,7 +118,8 @@ describe('InvoiceListPage', () => {
     const user = userEvent.setup();
     renderPage();
 
-    await screen.findByText('IV1001');
+    const table = await screen.findByRole('table');
+    await within(table).findByText('IV1001');
     await user.click(screen.getByRole('combobox'));
     const listbox = await screen.findByRole('listbox');
     await user.click(within(listbox).getByText('Overdue'));

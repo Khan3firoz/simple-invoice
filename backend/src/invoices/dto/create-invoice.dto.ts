@@ -22,10 +22,9 @@ export class CustomerDto {
   @IsNotEmpty()
   fullname: string;
 
-  @ApiProperty({ required: false })
-  @IsOptional()
+  @ApiProperty()
   @IsEmail({}, { message: 'customer email must be a valid email address' })
-  email?: string;
+  email: string;
 
   @ApiProperty({ required: false })
   @IsOptional()

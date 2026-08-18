@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { ArrowDown, ArrowUp, ChevronsUpDown, Plus, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,6 +25,7 @@ import { fetchInvoices } from '@/lib/api/invoices';
 import type { InvoiceSortField, InvoiceStatusView, SortOrder } from '@/lib/api/types';
 import { formatDate, formatMoney } from '@/lib/format';
 import { useDebouncedValue } from '@/lib/useDebouncedValue';
+import { cn } from '@/lib/utils';
 import { StatusBadge } from './StatusBadge';
 
 const STATUS_OPTIONS: Array<{ value: InvoiceStatusView | 'all'; label: string }> = [
@@ -92,9 +93,10 @@ export function InvoiceListPage() {
     [page, sortBy, ordering, status, debouncedKeyword, fromDate, toDate],
   );
 
-  const { data, isLoading, isError } = useQuery({
+  const { data, isLoading, isError, isFetching } = useQuery({
     queryKey: ['invoices', query],
     queryFn: () => fetchInvoices(query),
+    placeholderData: keepPreviousData,
   });
 
   const handleSort = (field: InvoiceSortField) => {
@@ -194,96 +196,150 @@ export function InvoiceListPage() {
       </div>
 
       <div className="overflow-hidden rounded-lg border border-border">
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow className="hover:bg-transparent">
-                <TableHead>Invoice Number</TableHead>
-                <TableHead>Customer</TableHead>
-                <TableHead>
-                  <SortableHeader
-                    label="Invoice Date"
-                    field="invoiceDate"
-                    sortBy={sortBy}
-                    ordering={ordering}
-                    onSort={handleSort}
-                  />
-                </TableHead>
-                <TableHead>
-                  <SortableHeader
-                    label="Due Date"
-                    field="dueDate"
-                    sortBy={sortBy}
-                    ordering={ordering}
-                    onSort={handleSort}
-                  />
-                </TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">
-                  <div className="flex justify-end">
+        <div
+          className={cn(
+            'transition-opacity',
+            isFetching && !isLoading && 'opacity-60',
+          )}
+        >
+          {/* Desktop / tablet: full table. */}
+          <div className="hidden overflow-x-auto sm:block">
+            <Table>
+              <TableHeader>
+                <TableRow className="hover:bg-transparent">
+                  <TableHead>Invoice Number</TableHead>
+                  <TableHead>Customer</TableHead>
+                  <TableHead>
                     <SortableHeader
-                      label="Total Amount"
-                      field="totalAmount"
+                      label="Invoice Date"
+                      field="invoiceDate"
                       sortBy={sortBy}
                       ordering={ordering}
                       onSort={handleSort}
                     />
-                  </div>
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading &&
-                Array.from({ length: PAGE_SIZE }).map((_, i) => (
-                  <TableRow key={i}>
-                    {Array.from({ length: 6 }).map((__, j) => (
-                      <TableCell key={j}>
-                        <Skeleton className="h-5 w-full" />
+                  </TableHead>
+                  <TableHead>
+                    <SortableHeader
+                      label="Due Date"
+                      field="dueDate"
+                      sortBy={sortBy}
+                      ordering={ordering}
+                      onSort={handleSort}
+                    />
+                  </TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">
+                    <div className="flex justify-end">
+                      <SortableHeader
+                        label="Total Amount"
+                        field="totalAmount"
+                        sortBy={sortBy}
+                        ordering={ordering}
+                        onSort={handleSort}
+                      />
+                    </div>
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {isLoading &&
+                  Array.from({ length: PAGE_SIZE }).map((_, i) => (
+                    <TableRow key={i}>
+                      {Array.from({ length: 6 }).map((__, j) => (
+                        <TableCell key={j}>
+                          <Skeleton className="h-5 w-full" />
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))}
+
+                {!isLoading && isError && (
+                  <TableRow>
+                    <TableCell colSpan={6} className="py-10 text-center text-destructive">
+                      Failed to load invoices. Please try again.
+                    </TableCell>
+                  </TableRow>
+                )}
+
+                {!isLoading && !isError && data?.data.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={6} className="py-10 text-center text-muted-foreground">
+                      No invoices found.
+                    </TableCell>
+                  </TableRow>
+                )}
+
+                {!isLoading &&
+                  !isError &&
+                  data?.data.map((invoice) => (
+                    <TableRow
+                      key={invoice.invoiceId}
+                      className="cursor-pointer"
+                      onClick={() => navigate(`/invoices/${invoice.invoiceId}`)}
+                    >
+                      <TableCell className="font-medium">{invoice.invoiceNumber}</TableCell>
+                      <TableCell className="font-medium text-foreground">
+                        {invoice.customer.fullname}
                       </TableCell>
-                    ))}
-                  </TableRow>
-                ))}
+                      <TableCell>{formatDate(invoice.invoiceDate)}</TableCell>
+                      <TableCell>{formatDate(invoice.dueDate)}</TableCell>
+                      <TableCell>
+                        <StatusBadge status={invoice.status} />
+                      </TableCell>
+                      <TableCell className="text-right font-medium">
+                        {formatMoney(invoice.totalAmount, invoice.currencySymbol)}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+              </TableBody>
+            </Table>
+          </div>
 
-              {!isLoading && isError && (
-                <TableRow>
-                  <TableCell colSpan={6} className="py-10 text-center text-destructive">
-                    Failed to load invoices. Please try again.
-                  </TableCell>
-                </TableRow>
-              )}
+          {/* Mobile: stacked cards instead of a horizontally-scrolling table. */}
+          <div className="divide-y divide-border sm:hidden">
+            {isLoading &&
+              Array.from({ length: PAGE_SIZE }).map((_, i) => (
+                <div key={i} className="space-y-2 p-4">
+                  <Skeleton className="h-4 w-2/3" />
+                  <Skeleton className="h-4 w-1/3" />
+                </div>
+              ))}
 
-              {!isLoading && !isError && data?.data.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={6} className="py-10 text-center text-muted-foreground">
-                    No invoices found.
-                  </TableCell>
-                </TableRow>
-              )}
+            {!isLoading && isError && (
+              <p className="py-10 text-center text-sm text-destructive">
+                Failed to load invoices. Please try again.
+              </p>
+            )}
 
-              {!isLoading &&
-                !isError &&
-                data?.data.map((invoice) => (
-                  <TableRow
-                    key={invoice.invoiceId}
-                    className="cursor-pointer"
-                    onClick={() => navigate(`/invoices/${invoice.invoiceId}`)}
-                  >
-                    <TableCell className="font-medium">{invoice.invoiceNumber}</TableCell>
-                    <TableCell className="font-medium text-foreground">
-                      {invoice.customer.fullname}
-                    </TableCell>
-                    <TableCell>{formatDate(invoice.invoiceDate)}</TableCell>
-                    <TableCell>{formatDate(invoice.dueDate)}</TableCell>
-                    <TableCell>
-                      <StatusBadge status={invoice.status} />
-                    </TableCell>
-                    <TableCell className="text-right font-medium">
+            {!isLoading && !isError && data?.data.length === 0 && (
+              <p className="py-10 text-center text-sm text-muted-foreground">No invoices found.</p>
+            )}
+
+            {!isLoading &&
+              !isError &&
+              data?.data.map((invoice) => (
+                <button
+                  key={invoice.invoiceId}
+                  type="button"
+                  onClick={() => navigate(`/invoices/${invoice.invoiceId}`)}
+                  className="flex w-full flex-col gap-2 p-4 text-left active:bg-accent"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-medium">{invoice.invoiceNumber}</span>
+                    <StatusBadge status={invoice.status} />
+                  </div>
+                  <p className="text-sm text-foreground">{invoice.customer.fullname}</p>
+                  <div className="flex items-center justify-between text-sm text-muted-foreground">
+                    <span>
+                      {formatDate(invoice.invoiceDate)} → {formatDate(invoice.dueDate)}
+                    </span>
+                    <span className="font-medium text-foreground">
                       {formatMoney(invoice.totalAmount, invoice.currencySymbol)}
-                    </TableCell>
-                  </TableRow>
-                ))}
-            </TableBody>
-          </Table>
+                    </span>
+                  </div>
+                </button>
+              ))}
+          </div>
         </div>
 
         <Pagination

@@ -24,3 +24,6 @@ Thumbs.db
 
 # Vite
 .vite/
+/_bmad
+/_bmad-output
+/.claude

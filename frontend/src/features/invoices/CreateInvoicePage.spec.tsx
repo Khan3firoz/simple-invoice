@@ -124,9 +124,7 @@ describe('CreateInvoicePage', () => {
     expect(itemRow(0).getByRole('button', { name: /remove item/i })).toBeDisabled();
   });
 
-  it('submits successfully without a customer email', async () => {
-    vi.mocked(invoicesApi.createInvoice).mockResolvedValue({} as Invoice);
-
+  it('rejects submission when the customer email is blank', async () => {
     const user = userEvent.setup();
     renderCreatePage();
 
@@ -137,13 +135,11 @@ describe('CreateInvoicePage', () => {
     await fillItemRow(user, 0, { name: 'Consulting', quantity: '2', rate: '150' });
     await user.click(screen.getByRole('button', { name: /create invoice/i }));
 
-    await waitFor(() => expect(screen.getByText('Invoice list page')).toBeInTheDocument());
-
-    const payload = vi.mocked(invoicesApi.createInvoice).mock.calls[0][0];
-    expect(payload.customer.email).toBeUndefined();
+    expect(await screen.findByText('Customer email is required')).toBeInTheDocument();
+    expect(invoicesApi.createInvoice).not.toHaveBeenCalled();
   });
 
-  it('rejects a malformed customer email while still allowing it to be blank', async () => {
+  it('rejects a malformed customer email', async () => {
     const user = userEvent.setup();
     renderCreatePage();
 
