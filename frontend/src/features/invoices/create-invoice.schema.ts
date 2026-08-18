@@ -22,6 +22,10 @@ function isNonNegativeNumber(value: string): boolean {
   return value.trim() !== '' && Number.isFinite(n) && n >= 0;
 }
 
+export function todayDateString(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
 // Mirrors the backend's CreateInvoiceDto validation rules (backend/src/invoices/dto/create-invoice.dto.ts)
 // so the user sees the same errors client-side before a round trip is made.
 // Numeric fields stay as strings here (native <input> values are strings)
@@ -59,7 +63,7 @@ export type CreateInvoiceFormValues = z.infer<typeof createInvoiceSchema>;
 export const createInvoiceDefaults: CreateInvoiceFormValues = {
   invoiceNumber: '',
   invoiceReference: '',
-  invoiceDate: '',
+  invoiceDate: todayDateString(),
   dueDate: '',
   currency: CURRENCIES[0].code,
   currencySymbol: CURRENCIES[0].symbol,

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -24,10 +24,18 @@ function renderCreatePage() {
   );
 }
 
+// Native <input type="date"> uses a segmented picker UI that userEvent.type()
+// doesn't reliably drive (especially once the field already has a default
+// value, as invoiceDate now does). Setting .value + firing change is the
+// standard, reliable way to test date inputs.
+function setDateValue(input: HTMLElement, value: string) {
+  fireEvent.change(input, { target: { value } });
+}
+
 async function fillValidForm(user: ReturnType<typeof userEvent.setup>) {
   await user.type(screen.getByLabelText(/invoice number/i), 'IV-0001');
-  await user.type(screen.getByLabelText(/invoice date/i), '2026-09-01');
-  await user.type(screen.getByLabelText(/due date/i), '2026-09-15');
+  setDateValue(screen.getByLabelText(/invoice date/i), '2026-09-01');
+  setDateValue(screen.getByLabelText(/due date/i), '2026-09-15');
   await user.type(screen.getByLabelText(/customer name/i), 'Jane Doe');
   await user.type(screen.getByLabelText(/customer email/i), 'jane@example.com');
   await user.type(screen.getByLabelText(/item name/i), 'Consulting');
@@ -57,8 +65,7 @@ describe('CreateInvoicePage', () => {
     renderCreatePage();
 
     await fillValidForm(user);
-    await user.clear(screen.getByLabelText(/due date/i));
-    await user.type(screen.getByLabelText(/due date/i), '2026-08-01');
+    setDateValue(screen.getByLabelText(/due date/i), '2026-08-01');
     await user.click(screen.getByRole('button', { name: /create invoice/i }));
 
     expect(await screen.findByText('Due date must be on or after invoice date')).toBeInTheDocument();
@@ -82,8 +89,8 @@ describe('CreateInvoicePage', () => {
     renderCreatePage();
 
     await user.type(screen.getByLabelText(/invoice number/i), 'IV-0002');
-    await user.type(screen.getByLabelText(/invoice date/i), '2026-09-01');
-    await user.type(screen.getByLabelText(/due date/i), '2026-09-15');
+    setDateValue(screen.getByLabelText(/invoice date/i), '2026-09-01');
+    setDateValue(screen.getByLabelText(/due date/i), '2026-09-15');
     await user.type(screen.getByLabelText(/customer name/i), 'Jane Doe');
     await user.type(screen.getByLabelText(/item name/i), 'Consulting');
     await user.type(screen.getByLabelText(/^quantity/i), '2');

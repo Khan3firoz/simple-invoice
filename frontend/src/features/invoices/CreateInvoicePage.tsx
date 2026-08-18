@@ -22,6 +22,7 @@ import {
   CURRENCIES,
   createInvoiceDefaults,
   createInvoiceSchema,
+  todayDateString,
   type CreateInvoiceFormValues,
 } from './create-invoice.schema';
 
@@ -60,12 +61,21 @@ export function CreateInvoicePage() {
     },
   });
 
-  const [quantity, rate, currency] = watch(['itemQuantity', 'itemRate', 'currency']);
+  const [quantity, rate, currency, invoiceDate] = watch([
+    'itemQuantity',
+    'itemRate',
+    'currency',
+    'invoiceDate',
+  ]);
   const currencySymbol = CURRENCIES.find((c) => c.code === currency)?.symbol ?? '';
   const itemAmount =
     Number.isFinite(Number(quantity)) && Number.isFinite(Number(rate))
       ? Number(quantity) * Number(rate)
       : 0;
+  // Due date can't be before the invoice date (server enforces the same
+  // rule) — the native date picker's `min` blocks picking an invalid date
+  // in the first place instead of only flagging it after the fact.
+  const dueDateMin = invoiceDate || todayDateString();
 
   const onSubmit = (values: CreateInvoiceFormValues) => {
     mutation.mutate({
@@ -138,6 +148,7 @@ export function CreateInvoicePage() {
               <Input
                 id="dueDate"
                 type="date"
+                min={dueDateMin}
                 className="mt-1.5"
                 aria-invalid={!!errors.dueDate}
                 {...register('dueDate')}
