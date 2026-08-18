@@ -269,11 +269,8 @@ export function InvoiceListPage() {
                     onClick={() => navigate(`/invoices/${invoice.invoiceId}`)}
                   >
                     <TableCell className="font-medium">{invoice.invoiceNumber}</TableCell>
-                    <TableCell>
-                      <div className="font-medium text-foreground">{invoice.customer.fullname}</div>
-                      {invoice.customer.email && (
-                        <div className="text-xs text-muted-foreground">{invoice.customer.email}</div>
-                      )}
+                    <TableCell className="font-medium text-foreground">
+                      {invoice.customer.fullname}
                     </TableCell>
                     <TableCell>{formatDate(invoice.invoiceDate)}</TableCell>
                     <TableCell>{formatDate(invoice.dueDate)}</TableCell>
