@@ -37,7 +37,8 @@ export const createInvoiceSchema = z
     description: z.string().trim().optional(),
 
     customerFullname: z.string().trim().min(1, 'Customer name is required'),
-    customerEmail: z.string().trim().min(1, 'Customer email is required').email('Enter a valid email address'),
+    // Optional, but must still be a well-formed email if the user does enter one.
+    customerEmail: z.union([z.literal(''), z.string().trim().email('Enter a valid email address')]),
     customerMobile: z.string().trim().optional(),
     customerAddress: z.string().trim().optional(),
 

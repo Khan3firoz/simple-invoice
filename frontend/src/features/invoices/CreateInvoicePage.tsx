@@ -78,7 +78,7 @@ export function CreateInvoicePage() {
       description: values.description || undefined,
       customer: {
         fullname: values.customerFullname,
-        email: values.customerEmail,
+        email: values.customerEmail || undefined,
         mobileNumber: values.customerMobile || undefined,
         address: values.customerAddress || undefined,
       },
@@ -192,7 +192,7 @@ export function CreateInvoicePage() {
               <FieldError message={errors.customerFullname?.message} />
             </div>
             <div>
-              <Label htmlFor="customerEmail">Customer email *</Label>
+              <Label htmlFor="customerEmail">Customer email</Label>
               <Input
                 id="customerEmail"
                 type="email"

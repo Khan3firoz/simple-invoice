@@ -108,6 +108,7 @@ Backend unit tests cover invoice total calculation, Overdue derivation, due-date
 - **List endpoint doesn't join invoice items.** A `leftJoinAndSelect` on a one-to-many relation combined with `skip/take` pagination duplicates rows and corrupts the count once an invoice can have more than one item — and the list view doesn't need item detail anyway (only the detail endpoint loads items).
 - **Currency is a fixed short list** (AUD, USD, GBP, SGD, EUR) in the create-invoice UI for simplicity; the backend accepts any non-empty currency/symbol pair.
 - **bcryptjs instead of bcrypt** — avoids native-module compilation issues across Windows/Docker/CI, at a small performance cost that doesn't matter at this scale.
+- **Customer email is optional**, not required. This intentionally deviates from the assessment spec's "Customer email: Required, valid email format" rule — the format is still validated when an email *is* provided (client and server), it just isn't mandatory to submit an invoice.
 
 ## Known limitations
 

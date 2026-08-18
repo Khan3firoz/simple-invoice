@@ -75,6 +75,38 @@ describe('CreateInvoicePage', () => {
     expect(await screen.findByText('AU$300.00')).toBeInTheDocument();
   });
 
+  it('submits successfully without a customer email', async () => {
+    vi.mocked(invoicesApi.createInvoice).mockResolvedValue({} as Invoice);
+
+    const user = userEvent.setup();
+    renderCreatePage();
+
+    await user.type(screen.getByLabelText(/invoice number/i), 'IV-0002');
+    await user.type(screen.getByLabelText(/invoice date/i), '2026-09-01');
+    await user.type(screen.getByLabelText(/due date/i), '2026-09-15');
+    await user.type(screen.getByLabelText(/customer name/i), 'Jane Doe');
+    await user.type(screen.getByLabelText(/item name/i), 'Consulting');
+    await user.type(screen.getByLabelText(/^quantity/i), '2');
+    await user.type(screen.getByLabelText(/^rate/i), '150');
+    await user.click(screen.getByRole('button', { name: /create invoice/i }));
+
+    await waitFor(() => expect(screen.getByText('Invoice list page')).toBeInTheDocument());
+
+    const payload = vi.mocked(invoicesApi.createInvoice).mock.calls[0][0];
+    expect(payload.customer.email).toBeUndefined();
+  });
+
+  it('rejects a malformed customer email while still allowing it to be blank', async () => {
+    const user = userEvent.setup();
+    renderCreatePage();
+
+    await user.type(screen.getByLabelText(/customer email/i), 'not-an-email');
+    await user.click(screen.getByRole('button', { name: /create invoice/i }));
+
+    expect(await screen.findByText('Enter a valid email address')).toBeInTheDocument();
+    expect(invoicesApi.createInvoice).not.toHaveBeenCalled();
+  });
+
   it('submits the mapped payload and redirects to the list on success', async () => {
     vi.mocked(invoicesApi.createInvoice).mockResolvedValue({} as Invoice);
 

@@ -5,8 +5,8 @@ export class CustomerResponseDto {
   @ApiProperty()
   fullname: string;
 
-  @ApiProperty()
-  email: string;
+  @ApiProperty({ required: false })
+  email?: string;
 
   @ApiProperty({ required: false })
   mobileNumber?: string;

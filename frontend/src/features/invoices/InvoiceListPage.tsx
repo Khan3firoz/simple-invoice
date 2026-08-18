@@ -271,7 +271,9 @@ export function InvoiceListPage() {
                     <TableCell className="font-medium">{invoice.invoiceNumber}</TableCell>
                     <TableCell>
                       <div className="font-medium text-foreground">{invoice.customer.fullname}</div>
-                      <div className="text-xs text-muted-foreground">{invoice.customer.email}</div>
+                      {invoice.customer.email && (
+                        <div className="text-xs text-muted-foreground">{invoice.customer.email}</div>
+                      )}
                     </TableCell>
                     <TableCell>{formatDate(invoice.invoiceDate)}</TableCell>
                     <TableCell>{formatDate(invoice.dueDate)}</TableCell>

@@ -128,7 +128,7 @@ export function InvoiceDetailPage() {
       <Section title="Customer">
         <dl className="grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2">
           <Field label="Name" value={invoice.customer.fullname} />
-          <Field label="Email" value={invoice.customer.email} />
+          <Field label="Email" value={invoice.customer.email || '—'} />
           <Field label="Mobile" value={invoice.customer.mobileNumber || '—'} />
           <Field label="Address" value={invoice.customer.address || '—'} />
         </dl>

@@ -3,7 +3,7 @@ export type InvoiceStatusView = InvoiceStatus | 'Overdue';
 
 export interface Customer {
   fullname: string;
-  email: string;
+  email?: string;
   mobileNumber?: string;
   address?: string;
 }
