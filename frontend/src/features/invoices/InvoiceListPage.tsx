@@ -35,7 +35,7 @@ const STATUS_OPTIONS: Array<{ value: InvoiceStatusView | 'all'; label: string }>
   { value: 'Overdue', label: 'Overdue' },
 ];
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 6;
 
 function SortableHeader({
   label,
@@ -234,7 +234,7 @@ export function InvoiceListPage() {
             </TableHeader>
             <TableBody>
               {isLoading &&
-                Array.from({ length: 6 }).map((_, i) => (
+                Array.from({ length: PAGE_SIZE }).map((_, i) => (
                   <TableRow key={i}>
                     {Array.from({ length: 6 }).map((__, j) => (
                       <TableCell key={j}>

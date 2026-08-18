@@ -23,7 +23,7 @@ export function AppLayout() {
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border">
-        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
+        <div className="mx-auto flex h-16 max-w-[1600px] items-center justify-between px-4 sm:px-6">
           <span className="text-lg font-semibold tracking-tight">
             <span className="text-foreground">Simple</span>
             <span className="text-blue-500">Invoice</span>
@@ -54,7 +54,7 @@ export function AppLayout() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
+      <main className="mx-auto max-w-[1600px] px-4 py-8 sm:px-6">
         <Outlet />
       </main>
     </div>

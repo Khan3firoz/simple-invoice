@@ -126,5 +126,9 @@
     }
   html {
     @apply font-sans;
+    /* Always reserve the vertical scrollbar's width so centered page
+       content doesn't shift sideways when a page's height crosses the
+       viewport threshold (e.g. paginating between a full and partial page). */
+    scrollbar-gutter: stable;
     }
 }
