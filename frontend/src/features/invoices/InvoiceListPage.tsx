@@ -35,7 +35,7 @@ const STATUS_OPTIONS: Array<{ value: InvoiceStatusView | 'all'; label: string }>
   { value: 'Overdue', label: 'Overdue' },
 ];
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 8;
 
 function SortableHeader({
   label,
