@@ -1,14 +1,7 @@
 import { Link, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { isAxiosError } from 'axios';
-import { ArrowLeft, MoreHorizontal, Printer } from 'lucide-react';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Button } from '@/components/ui/button';
+import { ArrowLeft } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   Table,
@@ -84,34 +77,17 @@ export function InvoiceDetailPage() {
         </Link>
       </div>
 
-      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Invoice {invoice.invoiceNumber}</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Review invoice information and payment status
-          </p>
-          <div className="mt-3 flex items-center gap-3">
-            <StatusBadge status={invoice.status} />
-            <span className="text-xs text-muted-foreground">
-              Last updated {formatDate(invoice.createdAt.slice(0, 10))}
-            </span>
-          </div>
+      <div>
+        <h1 className="text-2xl font-semibold tracking-tight">Invoice {invoice.invoiceNumber}</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Review invoice information and payment status
+        </p>
+        <div className="mt-3 flex items-center gap-3">
+          <StatusBadge status={invoice.status} />
+          <span className="text-xs text-muted-foreground">
+            Last updated {formatDate(invoice.createdAt.slice(0, 10))}
+          </span>
         </div>
-
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline">
-              <MoreHorizontal className="size-4" />
-              Actions
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onSelect={() => window.print()}>
-              <Printer className="size-4" />
-              Print Invoice
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
       </div>
 
       <Section title="Invoice information">
