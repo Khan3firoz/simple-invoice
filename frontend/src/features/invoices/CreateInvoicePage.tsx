@@ -1,9 +1,10 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
+import { useFieldArray, useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
 import { isAxiosError } from 'axios';
 import { toast } from 'sonner';
+import { Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -22,6 +23,7 @@ import {
   CURRENCIES,
   createInvoiceDefaults,
   createInvoiceSchema,
+  emptyInvoiceItem,
   todayDateString,
   type CreateInvoiceFormValues,
 } from './create-invoice.schema';
@@ -36,6 +38,7 @@ export function CreateInvoicePage() {
 
   const {
     register,
+    control,
     handleSubmit,
     setValue,
     setError,
@@ -45,6 +48,8 @@ export function CreateInvoicePage() {
     resolver: zodResolver(createInvoiceSchema),
     defaultValues: createInvoiceDefaults,
   });
+
+  const { fields, append, remove } = useFieldArray({ control, name: 'items' });
 
   const mutation = useMutation({
     mutationFn: createInvoice,
@@ -61,17 +66,13 @@ export function CreateInvoicePage() {
     },
   });
 
-  const [quantity, rate, currency, invoiceDate] = watch([
-    'itemQuantity',
-    'itemRate',
-    'currency',
-    'invoiceDate',
-  ]);
+  const [items, currency, invoiceDate] = watch(['items', 'currency', 'invoiceDate']);
   const currencySymbol = CURRENCIES.find((c) => c.code === currency)?.symbol ?? '';
-  const itemAmount =
+  const rowAmount = (quantity: string, rate: string) =>
     Number.isFinite(Number(quantity)) && Number.isFinite(Number(rate))
       ? Number(quantity) * Number(rate)
       : 0;
+  const itemsSubtotal = items.reduce((sum, item) => sum + rowAmount(item.quantity, item.rate), 0);
   // Due date can't be before the invoice date (server enforces the same
   // rule) — the native date picker's `min` blocks picking an invalid date
   // in the first place instead of only flagging it after the fact.
@@ -92,11 +93,11 @@ export function CreateInvoicePage() {
         mobileNumber: values.customerMobile || undefined,
         address: values.customerAddress || undefined,
       },
-      item: {
-        name: values.itemName,
-        quantity: Number(values.itemQuantity),
-        rate: Number(values.itemRate),
-      },
+      items: values.items.map((item) => ({
+        name: item.name,
+        quantity: Number(item.quantity),
+        rate: Number(item.rate),
+      })),
       taxPercent: Number(values.taxPercent),
       discount: Number(values.discount),
     });
@@ -225,49 +226,88 @@ export function CreateInvoicePage() {
         </section>
 
         <section className="space-y-4 rounded-lg border border-border bg-card p-6">
-          <h2 className="text-sm font-semibold">Invoice item</h2>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <div>
-              <Label htmlFor="itemName">Item name *</Label>
-              <Input
-                id="itemName"
-                className="mt-1.5"
-                aria-invalid={!!errors.itemName}
-                {...register('itemName')}
-              />
-              <FieldError message={errors.itemName?.message} />
-            </div>
-            <div>
-              <Label htmlFor="itemQuantity">Quantity *</Label>
-              <Input
-                id="itemQuantity"
-                type="number"
-                step="1"
-                min="1"
-                className="mt-1.5"
-                aria-invalid={!!errors.itemQuantity}
-                {...register('itemQuantity')}
-              />
-              <FieldError message={errors.itemQuantity?.message} />
-            </div>
-            <div>
-              <Label htmlFor="itemRate">Rate *</Label>
-              <Input
-                id="itemRate"
-                type="number"
-                step="0.01"
-                min="0"
-                className="mt-1.5"
-                aria-invalid={!!errors.itemRate}
-                {...register('itemRate')}
-              />
-              <FieldError message={errors.itemRate?.message} />
-            </div>
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-semibold">Invoice items</h2>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => append(emptyInvoiceItem)}
+            >
+              <Plus className="size-4" />
+              Add item
+            </Button>
+          </div>
+
+          {errors.items?.root?.message && <FieldError message={errors.items.root.message} />}
+
+          <div className="space-y-4">
+            {fields.map((field, index) => (
+              <div
+                key={field.id}
+                data-testid={`item-row-${index}`}
+                className="grid grid-cols-1 gap-4 border-b border-border pb-4 last:border-0 last:pb-0 sm:grid-cols-[1fr_140px_140px_auto] sm:items-start"
+              >
+                <div>
+                  <Label htmlFor={`items.${index}.name`}>Item name *</Label>
+                  <Input
+                    id={`items.${index}.name`}
+                    className="mt-1.5"
+                    aria-invalid={!!errors.items?.[index]?.name}
+                    {...register(`items.${index}.name` as const)}
+                  />
+                  <FieldError message={errors.items?.[index]?.name?.message} />
+                </div>
+                <div>
+                  <Label htmlFor={`items.${index}.quantity`}>Quantity *</Label>
+                  <Input
+                    id={`items.${index}.quantity`}
+                    type="number"
+                    step="1"
+                    min="1"
+                    className="mt-1.5"
+                    aria-invalid={!!errors.items?.[index]?.quantity}
+                    {...register(`items.${index}.quantity` as const)}
+                  />
+                  <FieldError message={errors.items?.[index]?.quantity?.message} />
+                </div>
+                <div>
+                  <Label htmlFor={`items.${index}.rate`}>Rate *</Label>
+                  <Input
+                    id={`items.${index}.rate`}
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    className="mt-1.5"
+                    aria-invalid={!!errors.items?.[index]?.rate}
+                    {...register(`items.${index}.rate` as const)}
+                  />
+                  <FieldError message={errors.items?.[index]?.rate?.message} />
+                </div>
+                <div className="flex items-end justify-between gap-2 sm:flex-col sm:items-end sm:gap-1.5">
+                  <span className="mt-1.5 text-sm text-muted-foreground sm:mt-6">
+                    {formatMoney(rowAmount(items[index]?.quantity ?? '', items[index]?.rate ?? ''), currencySymbol)}
+                  </span>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    aria-label="Remove item"
+                    disabled={fields.length === 1}
+                    onClick={() => remove(index)}
+                  >
+                    <Trash2 className="size-4" />
+                  </Button>
+                </div>
+              </div>
+            ))}
           </div>
 
           <div className="flex items-center justify-between rounded-md bg-muted px-4 py-2.5 text-sm">
-            <span className="text-muted-foreground">Item amount</span>
-            <span className="font-semibold">{formatMoney(itemAmount, currencySymbol)}</span>
+            <span className="text-muted-foreground">Items subtotal</span>
+            <span className="font-semibold" data-testid="items-subtotal">
+              {formatMoney(itemsSubtotal, currencySymbol)}
+            </span>
           </div>
         </section>
 

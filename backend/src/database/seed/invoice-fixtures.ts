@@ -157,7 +157,11 @@ export function buildInvoiceFixtures(userId: string): InvoiceFixture[] {
     const quantity = item.quantity;
     const rate = item.rate + (i % 3) * 25;
     const { subTotal, taxAmount, totalAmount } =
-      InvoicesService.calculateTotals(quantity, rate, taxPercent, discount);
+      InvoicesService.calculateTotals(
+        [{ quantity, rate }],
+        taxPercent,
+        discount,
+      );
     const totalPaid =
       status === InvoiceStatus.PAID
         ? totalAmount

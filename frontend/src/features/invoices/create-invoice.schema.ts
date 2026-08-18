@@ -26,6 +26,16 @@ export function todayDateString(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
+const invoiceItemSchema = z.object({
+  name: z.string().trim().min(1, 'Item name is required'),
+  quantity: z.string().refine(isPositiveInteger, 'Quantity must be a whole number greater than 0'),
+  rate: z.string().refine(isPositiveNumber, 'Rate must be greater than 0'),
+});
+
+export type InvoiceItemFormValues = z.infer<typeof invoiceItemSchema>;
+
+export const emptyInvoiceItem: InvoiceItemFormValues = { name: '', quantity: '', rate: '' };
+
 // Mirrors the backend's CreateInvoiceDto validation rules (backend/src/invoices/dto/create-invoice.dto.ts)
 // so the user sees the same errors client-side before a round trip is made.
 // Numeric fields stay as strings here (native <input> values are strings)
@@ -46,9 +56,7 @@ export const createInvoiceSchema = z
     customerMobile: z.string().trim().optional(),
     customerAddress: z.string().trim().optional(),
 
-    itemName: z.string().trim().min(1, 'Item name is required'),
-    itemQuantity: z.string().refine(isPositiveInteger, 'Quantity must be a whole number greater than 0'),
-    itemRate: z.string().refine(isPositiveNumber, 'Rate must be greater than 0'),
+    items: z.array(invoiceItemSchema).min(1, 'At least one item is required'),
 
     taxPercent: z.string().refine(isNonNegativeNumber, 'Tax must be 0 or greater'),
     discount: z.string().refine(isNonNegativeNumber, 'Discount must be 0 or greater'),
@@ -72,9 +80,7 @@ export const createInvoiceDefaults: CreateInvoiceFormValues = {
   customerEmail: '',
   customerMobile: '',
   customerAddress: '',
-  itemName: '',
-  itemQuantity: '',
-  itemRate: '',
+  items: [emptyInvoiceItem],
   taxPercent: '10',
   discount: '0',
 };

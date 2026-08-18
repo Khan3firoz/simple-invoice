@@ -68,11 +68,11 @@ export interface CreateInvoicePayload {
   currencySymbol: string;
   description?: string;
   customer: Customer;
-  item: {
+  items: Array<{
     name: string;
     quantity: number;
     rate: number;
-  };
+  }>;
   taxPercent?: number;
   discount?: number;
 }

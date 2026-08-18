@@ -23,9 +23,13 @@ function makeRepo(): MockRepo {
 
 describe('InvoicesService', () => {
   describe('calculateTotals (pure business logic)', () => {
-    it('computes subtotal, tax and total from quantity/rate/tax%/discount', () => {
+    it('computes subtotal, tax and total for a single item', () => {
       // subTotal = 2 * 1000 = 2000; tax 10% = 200; total = 2000 + 200 - 20 = 2180
-      const result = InvoicesService.calculateTotals(2, 1000, 10, 20);
+      const result = InvoicesService.calculateTotals(
+        [{ quantity: 2, rate: 1000 }],
+        10,
+        20,
+      );
       expect(result).toEqual({
         subTotal: 2000,
         taxAmount: 200,
@@ -33,13 +37,40 @@ describe('InvoicesService', () => {
       });
     });
 
+    it('sums quantity * rate across multiple items before applying tax/discount', () => {
+      // subTotal = (2*100) + (1*50) + (3*20) = 200 + 50 + 60 = 310
+      // tax 10% = 31; total = 310 + 31 - 10 = 331
+      const result = InvoicesService.calculateTotals(
+        [
+          { quantity: 2, rate: 100 },
+          { quantity: 1, rate: 50 },
+          { quantity: 3, rate: 20 },
+        ],
+        10,
+        10,
+      );
+      expect(result).toEqual({
+        subTotal: 310,
+        taxAmount: 31,
+        totalAmount: 331,
+      });
+    });
+
     it('defaults to zero discount', () => {
-      const result = InvoicesService.calculateTotals(1, 500, 10, 0);
+      const result = InvoicesService.calculateTotals(
+        [{ quantity: 1, rate: 500 }],
+        10,
+        0,
+      );
       expect(result.totalAmount).toBe(550);
     });
 
     it('supports a zero tax rate', () => {
-      const result = InvoicesService.calculateTotals(1, 500, 0, 0);
+      const result = InvoicesService.calculateTotals(
+        [{ quantity: 1, rate: 500 }],
+        0,
+        0,
+      );
       expect(result).toEqual({ subTotal: 500, taxAmount: 0, totalAmount: 500 });
     });
   });
@@ -93,7 +124,7 @@ describe('InvoicesService', () => {
       currency: 'USD',
       currencySymbol: 'US$',
       customer: { fullname: 'Jane Doe', email: 'jane@example.com' },
-      item: { name: 'Service', quantity: 2, rate: 100 },
+      items: [{ name: 'Service', quantity: 2, rate: 100 }],
       taxPercent: 10,
       discount: 0,
     };
@@ -117,6 +148,44 @@ describe('InvoicesService', () => {
       expect(result.status).toBe(InvoiceStatus.DRAFT);
       expect(repo.create).toHaveBeenCalledWith(
         expect.objectContaining({ status: InvoiceStatus.DRAFT }),
+      );
+    });
+
+    it('persists every line item and sums their totals across all of them', async () => {
+      const repo = makeRepo();
+      repo.save.mockImplementation((invoice: Partial<Invoice>) =>
+        Promise.resolve({
+          ...invoice,
+          invoiceId: 'id-2',
+          createdAt: new Date(),
+          items: invoice.items,
+        }),
+      );
+      const service = new InvoicesService(
+        repo as unknown as Repository<Invoice>,
+      );
+
+      const multiItemDto: CreateInvoiceDto = {
+        ...dto,
+        items: [
+          { name: 'Design', quantity: 1, rate: 500 },
+          { name: 'Development', quantity: 10, rate: 80 },
+        ],
+      };
+
+      const result = await service.create(multiItemDto, 'user-1');
+
+      // subTotal = 500 + 800 = 1300; tax 10% = 130; total = 1430
+      expect(result.invoiceSubTotal).toBe(1300);
+      expect(result.totalTax).toBe(130);
+      expect(result.totalAmount).toBe(1430);
+      expect(repo.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          items: [
+            { name: 'Design', quantity: 1, rate: 500 },
+            { name: 'Development', quantity: 10, rate: 80 },
+          ],
+        }),
       );
     });
 

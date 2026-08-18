@@ -103,7 +103,7 @@ Backend unit tests cover invoice total calculation, Overdue derivation, due-date
 ## Assumptions & design decisions
 
 - **Customer is embedded on the Invoice row**, not a separate `customers` table — nothing in this app queries "all invoices for a customer," so a join wasn't worth the extra complexity. Noted as a documented trade-off per the spec's data model guidance.
-- **One line item per invoice**, per the assessment scope. The schema (`invoice_items` as its own table, FK'd to `invoices`) already supports multiple items — the form/API just don't expose that yet.
+- **Multiple line items per invoice** — this also deviates from the assessment spec, which only required one. The schema (`invoice_items` as its own table, FK'd to `invoices`) was already designed for it; `POST /invoices` now takes an `items` array (min 1) instead of a single `item`, `calculateTotals` sums `quantity * rate` across every item before applying tax/discount, and the create form supports adding/removing item rows.
 - **Reviewer/session token stored in `localStorage`**, not an httpOnly cookie. Simpler for a SPA talking to a separately-hosted API with no shared domain; a production system handling sensitive data would likely move to httpOnly cookies + CSRF protection instead.
 - **List endpoint doesn't join invoice items.** A `leftJoinAndSelect` on a one-to-many relation combined with `skip/take` pagination duplicates rows and corrupts the count once an invoice can have more than one item — and the list view doesn't need item detail anyway (only the detail endpoint loads items).
 - **Currency is a fixed short list** (AUD, USD, GBP, SGD, EUR) in the create-invoice UI for simplicity; the backend accepts any non-empty currency/symbol pair.

@@ -1,6 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
+  ArrayMinSize,
+  IsArray,
   IsDateString,
   IsEmail,
   IsInt,
@@ -93,10 +95,12 @@ export class CreateInvoiceDto {
   @Type(() => CustomerDto)
   customer: CustomerDto;
 
-  @ApiProperty({ type: InvoiceItemDto })
-  @ValidateNested()
+  @ApiProperty({ type: [InvoiceItemDto], minItems: 1 })
+  @IsArray()
+  @ArrayMinSize(1, { message: 'At least one item is required' })
+  @ValidateNested({ each: true })
   @Type(() => InvoiceItemDto)
-  item: InvoiceItemDto;
+  items: InvoiceItemDto[];
 
   @ApiProperty({ required: false, default: 10 })
   @IsOptional()

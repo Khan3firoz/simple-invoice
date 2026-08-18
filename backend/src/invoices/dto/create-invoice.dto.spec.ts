@@ -9,7 +9,7 @@ const validPayload = {
   currency: 'USD',
   currencySymbol: 'US$',
   customer: { fullname: 'Jane Doe', email: 'jane@example.com' },
-  item: { name: 'Service', quantity: 1, rate: 100 },
+  items: [{ name: 'Service', quantity: 1, rate: 100 }],
 };
 
 async function validateDto(overrides: Record<string, unknown> = {}) {
@@ -63,9 +63,32 @@ describe('CreateInvoiceDto validation', () => {
 
   it('rejects a non-positive item quantity', async () => {
     const errors = await validateDto({
-      item: { name: 'Service', quantity: 0, rate: 100 },
+      items: [{ name: 'Service', quantity: 0, rate: 100 }],
     });
     expect(errors.length).toBeGreaterThan(0);
+  });
+
+  it('rejects an empty items array', async () => {
+    const errors = await validateDto({ items: [] });
+    expect(errors.find((e) => e.property === 'items')).toBeDefined();
+  });
+
+  it('accepts multiple items and validates each one independently', async () => {
+    const validErrors = await validateDto({
+      items: [
+        { name: 'Design', quantity: 1, rate: 500 },
+        { name: 'Development', quantity: 10, rate: 80 },
+      ],
+    });
+    expect(validErrors).toHaveLength(0);
+
+    const invalidErrors = await validateDto({
+      items: [
+        { name: 'Design', quantity: 1, rate: 500 },
+        { name: 'Development', quantity: -1, rate: 80 },
+      ],
+    });
+    expect(invalidErrors.length).toBeGreaterThan(0);
   });
 
   it('rejects a missing invoice number', async () => {

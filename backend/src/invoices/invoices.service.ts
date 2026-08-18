@@ -28,8 +28,7 @@ export class InvoicesService {
     userId: string,
   ): Promise<InvoiceResponseDto> {
     const totals = InvoicesService.calculateTotals(
-      dto.item.quantity,
-      dto.item.rate,
+      dto.items,
       dto.taxPercent ?? 10,
       dto.discount ?? 0,
     );
@@ -54,13 +53,11 @@ export class InvoicesService {
       totalPaid: 0,
       balanceAmount: totals.totalAmount,
       createdBy: userId,
-      items: [
-        {
-          name: dto.item.name,
-          quantity: dto.item.quantity,
-          rate: dto.item.rate,
-        },
-      ],
+      items: dto.items.map((item) => ({
+        name: item.name,
+        quantity: item.quantity,
+        rate: item.rate,
+      })),
     });
 
     try {
@@ -140,12 +137,14 @@ export class InvoicesService {
   }
 
   static calculateTotals(
-    quantity: number,
-    rate: number,
+    items: Array<{ quantity: number; rate: number }>,
     taxPercent: number,
     discount: number,
   ) {
-    const subTotal = quantity * rate;
+    const subTotal = items.reduce(
+      (sum, item) => sum + item.quantity * item.rate,
+      0,
+    );
     const taxAmount = subTotal * (taxPercent / 100);
     const totalAmount = subTotal + taxAmount - discount;
     return { subTotal, taxAmount, totalAmount };

@@ -59,7 +59,7 @@ describe('Invoices (e2e)', () => {
     return request(app.getHttpServer()).get('/invoices').expect(401);
   });
 
-  it('creates an invoice and the invoice then appears in the list', async () => {
+  it('creates a multi-item invoice and the invoice then appears in the list', async () => {
     const invoiceNumber = `E2E-${Date.now()}`;
 
     const createResponse = await request(app.getHttpServer())
@@ -72,7 +72,10 @@ describe('Invoices (e2e)', () => {
         currency: 'USD',
         currencySymbol: 'US$',
         customer: { fullname: 'E2E Customer', email: 'e2e@example.com' },
-        item: { name: 'Service', quantity: 2, rate: 150 },
+        items: [
+          { name: 'Design', quantity: 1, rate: 200 },
+          { name: 'Development', quantity: 2, rate: 50 },
+        ],
         taxPercent: 10,
         discount: 10,
       })
@@ -80,7 +83,8 @@ describe('Invoices (e2e)', () => {
 
     const created = createResponse.body as InvoiceResponseDto;
 
-    // subTotal = 300, tax = 30, total = 320 — verifies server-side calculation.
+    // subTotal = 200 + 100 = 300, tax = 30, total = 320 — verifies the
+    // server sums quantity*rate across every item before tax/discount.
     expect(created.status).toBe('Draft');
     expect(created.invoiceSubTotal).toBe(300);
     expect(created.totalTax).toBe(30);
@@ -103,8 +107,11 @@ describe('Invoices (e2e)', () => {
       .expect(200);
 
     const detail = detailResponse.body as InvoiceResponseDto;
-    expect(detail.items).toHaveLength(1);
-    expect(detail.items[0].name).toBe('Service');
+    expect(detail.items).toHaveLength(2);
+    expect(detail.items.map((i) => i.name).sort()).toEqual([
+      'Design',
+      'Development',
+    ]);
   });
 
   it('rejects a duplicate invoice number with 409', async () => {
@@ -116,7 +123,7 @@ describe('Invoices (e2e)', () => {
       currency: 'USD',
       currencySymbol: 'US$',
       customer: { fullname: 'E2E Customer', email: 'e2e@example.com' },
-      item: { name: 'Service', quantity: 1, rate: 100 },
+      items: [{ name: 'Service', quantity: 1, rate: 100 }],
     };
 
     await request(app.getHttpServer())
@@ -143,7 +150,7 @@ describe('Invoices (e2e)', () => {
         currency: 'USD',
         currencySymbol: 'US$',
         customer: { fullname: 'E2E Customer', email: 'e2e@example.com' },
-        item: { name: 'Service', quantity: 1, rate: 100 },
+        items: [{ name: 'Service', quantity: 1, rate: 100 }],
       })
       .expect(400);
 
